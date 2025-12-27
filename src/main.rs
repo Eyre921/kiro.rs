@@ -42,9 +42,9 @@ async fn main() {
 
     // 启动服务器
     let addr = format!("{}:{}", config.host, config.port);
-    tracing::info!("Starting Anthropic API server on {}", addr);
-    tracing::info!("API Key: {}***", &api_key[..api_key.len().min(4)]);
-    tracing::info!("Endpoints:");
+    tracing::info!("启动 Anthropic API 端点: {}", addr);
+    tracing::info!("API Key: {}***", &api_key[..(api_key.len()/2)]);
+    tracing::info!("可用 API:");
     tracing::info!("  GET  /v1/models");
     tracing::info!("  POST /v1/messages");
     tracing::info!("  POST /v1/messages/count_tokens");
