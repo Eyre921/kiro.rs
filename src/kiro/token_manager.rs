@@ -659,14 +659,14 @@ impl MultiTokenManager {
     /// # 参数
     /// - `model`: 可选的模型名称，用于过滤支持该模型的凭据（如 opus 模型需要付费订阅）
     fn select_next_credential(&self, model: Option<&str>) -> Option<(u64, KiroCredentials)> {
-        let entries = self.entries.lock();
+        let mut entries = self.entries.lock();
 
         // 检查是否是 opus 模型
         let is_opus = model
             .map(|m| m.to_lowercase().contains("opus"))
             .unwrap_or(false);
 
-        // 过滤可用凭据
+        // 过滤可用凭据（收集 id 用于后续查找）
         let available: Vec<_> = entries
             .iter()
             .filter(|e| {
@@ -692,10 +692,14 @@ impl MultiTokenManager {
             "balanced" => {
                 // Least-Used 策略：选择成功次数最少的凭据
                 // 平局时按优先级排序（数字越小优先级越高）
-                let entry = available
+                let best_id = available
                     .iter()
-                    .min_by_key(|e| (e.success_count, e.credentials.priority))?;
+                    .min_by_key(|e| (e.success_count, e.credentials.priority))
+                    .map(|e| e.id)?;
 
+                // 在锁内原子递增，确保并发请求分散到不同凭据
+                let entry = entries.iter_mut().find(|e| e.id == best_id)?;
+                entry.success_count += 1;
                 Some((entry.id, entry.credentials.clone()))
             }
             _ => {
@@ -1085,7 +1089,7 @@ impl MultiTokenManager {
             let mut entries = self.entries.lock();
             if let Some(entry) = entries.iter_mut().find(|e| e.id == id) {
                 entry.failure_count = 0;
-                entry.success_count += 1;
+                // success_count 已在 select_next_credential() 中原子递增，此处不再重复
                 entry.last_used_at = Some(Utc::now().to_rfc3339());
                 tracing::debug!(
                     "凭据 #{} API 调用成功（累计 {} 次）",
