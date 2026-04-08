@@ -219,18 +219,6 @@ impl KiroCredentials {
         }
     }
 
-    /// 从 JSON 字符串解析凭证
-    #[allow(dead_code)]
-    pub fn from_json(json_string: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json_string)
-    }
-
-    /// 序列化为格式化的 JSON 字符串
-    #[allow(dead_code)]
-    pub fn to_pretty_json(&self) -> Result<String, serde_json::Error> {
-        serde_json::to_string_pretty(self)
-    }
-
     pub fn canonicalize_auth_method(&mut self) {
         let auth_method = match &self.auth_method {
             Some(m) => m,
@@ -256,6 +244,17 @@ impl KiroCredentials {
             // 如果还没有获取订阅信息，暂时允许（首次使用时会获取）
             None => true,
         }
+    }
+}
+
+#[cfg(test)]
+impl KiroCredentials {
+    fn from_json(json_string: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json_string)
+    }
+
+    fn to_pretty_json(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string_pretty(self)
     }
 }
 

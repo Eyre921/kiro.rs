@@ -40,12 +40,6 @@ pub struct KiroProvider {
 }
 
 impl KiroProvider {
-    /// 创建新的 KiroProvider 实例
-    #[allow(dead_code)]
-    pub fn new(token_manager: Arc<MultiTokenManager>) -> Self {
-        Self::with_proxy(token_manager, None)
-    }
-
     /// 创建带代理配置的 KiroProvider 实例
     pub fn with_proxy(token_manager: Arc<MultiTokenManager>, proxy: Option<ProxyConfig>) -> Self {
         let tls_backend = token_manager.config().tls_backend;
@@ -73,21 +67,6 @@ impl KiroProvider {
         let client = build_client(effective.as_ref(), 720, self.tls_backend)?;
         cache.insert(effective, client.clone());
         Ok(client)
-    }
-
-    /// 获取 API 基础 URL（使用 config 级 api_region）
-    #[allow(dead_code)]
-    pub fn base_url(&self) -> String {
-        format!(
-            "https://q.{}.amazonaws.com/generateAssistantResponse",
-            self.token_manager.config().effective_api_region()
-        )
-    }
-
-    /// 获取 API 基础域名（使用 config 级 api_region）
-    #[allow(dead_code)]
-    pub fn base_domain(&self) -> String {
-        format!("q.{}.amazonaws.com", self.token_manager.config().effective_api_region())
     }
 
     /// 获取凭据级 API 基础 URL
@@ -620,25 +599,7 @@ mod tests {
 
     fn create_test_provider(config: Config, credentials: KiroCredentials) -> KiroProvider {
         let tm = MultiTokenManager::new(config, vec![credentials], None, None, false).unwrap();
-        KiroProvider::new(Arc::new(tm))
-    }
-
-    #[test]
-    fn test_base_url() {
-        let config = Config::default();
-        let credentials = KiroCredentials::default();
-        let provider = create_test_provider(config, credentials);
-        assert!(provider.base_url().contains("amazonaws.com"));
-        assert!(provider.base_url().contains("generateAssistantResponse"));
-    }
-
-    #[test]
-    fn test_base_domain() {
-        let mut config = Config::default();
-        config.region = "us-east-1".to_string();
-        let credentials = KiroCredentials::default();
-        let provider = create_test_provider(config, credentials);
-        assert_eq!(provider.base_domain(), "q.us-east-1.amazonaws.com");
+        KiroProvider::with_proxy(Arc::new(tm), None)
     }
 
     #[test]
