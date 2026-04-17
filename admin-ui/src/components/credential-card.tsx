@@ -255,6 +255,12 @@ export function CredentialCard({
               <span className="text-muted-foreground">最后调用：</span>
               <span className="font-medium">{formatLastUsed(credential.lastUsedAt)}</span>
             </div>
+            {credential.maskedApiKey && (
+              <div className="col-span-2">
+                <span className="text-muted-foreground">API Key：</span>
+                <span className="font-mono font-medium">{credential.maskedApiKey}</span>
+              </div>
+            )}
             <div className="col-span-2">
               <span className="text-muted-foreground">剩余用量：</span>
               {loadingBalance ? (

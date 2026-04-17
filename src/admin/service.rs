@@ -70,6 +70,8 @@ impl AdminService {
                 auth_method: entry.auth_method,
                 has_profile_arn: entry.has_profile_arn,
                 refresh_token_hash: entry.refresh_token_hash,
+                api_key_hash: entry.api_key_hash,
+                masked_api_key: entry.masked_api_key,
                 email: entry.email,
                 success_count: entry.success_count,
                 last_used_at: entry.last_used_at.clone(),

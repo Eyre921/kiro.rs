@@ -18,6 +18,8 @@ export interface CredentialStatusItem {
   hasProfileArn: boolean
   email?: string
   refreshTokenHash?: string
+  apiKeyHash?: string
+  maskedApiKey?: string
   successCount: number
   lastUsedAt: string | null
   hasProxy: boolean

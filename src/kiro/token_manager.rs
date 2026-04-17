@@ -54,6 +54,15 @@ fn sha256_hex(input: &str) -> String {
     format!("{:x}", result)
 }
 
+/// 生成 API Key 脱敏展示(前 4 + ... + 后 4,长度不足或非 ASCII 回退 ***)
+fn mask_api_key(key: &str) -> String {
+    if key.is_ascii() && key.len() > 16 {
+        format!("{}...{}", &key[..4], &key[key.len() - 4..])
+    } else {
+        "***".to_string()
+    }
+}
+
 /// 验证 refreshToken 的基本有效性
 pub(crate) fn validate_refresh_token(credentials: &KiroCredentials) -> anyhow::Result<()> {
     let refresh_token = credentials
@@ -453,8 +462,12 @@ pub struct CredentialEntrySnapshot {
     pub has_profile_arn: bool,
     /// Token 过期时间
     pub expires_at: Option<String>,
-    /// refreshToken 的 SHA-256 哈希（用于前端重复检测）
+    /// refreshToken 的 SHA-256 哈希（仅 OAuth 凭据，用于前端去重）
     pub refresh_token_hash: Option<String>,
+    /// kiroApiKey 的 SHA-256 哈希（仅 API Key 凭据，用于前端去重）
+    pub api_key_hash: Option<String>,
+    /// kiroApiKey 的脱敏展示（仅 API Key 凭据，用于前端显示）
+    pub masked_api_key: Option<String>,
     /// 用户邮箱（用于前端显示）
     pub email: Option<String>,
     /// API 调用成功次数
@@ -1412,16 +1425,19 @@ impl MultiTokenManager {
                         e.credentials.expires_at.clone()
                     },
                     refresh_token_hash: if e.credentials.is_api_key_credential() {
-                        // API Key 凭据显示脱敏的 key
-                        e.credentials.kiro_api_key.as_deref().map(|k| {
-                            if k.is_ascii() && k.len() > 16 {
-                                format!("{}...{}", &k[..4], &k[k.len()-4..])
-                            } else {
-                                "***".to_string()
-                            }
-                        })
+                        None
                     } else {
                         e.credentials.refresh_token.as_deref().map(sha256_hex)
+                    },
+                    api_key_hash: if e.credentials.is_api_key_credential() {
+                        e.credentials.kiro_api_key.as_deref().map(sha256_hex)
+                    } else {
+                        None
+                    },
+                    masked_api_key: if e.credentials.is_api_key_credential() {
+                        e.credentials.kiro_api_key.as_deref().map(mask_api_key)
+                    } else {
+                        None
                     },
                     email: e.credentials.email.clone(),
                     success_count: e.success_count,
