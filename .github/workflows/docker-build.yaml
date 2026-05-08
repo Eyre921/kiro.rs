@@ -17,6 +17,9 @@ permissions:
   contents: read
   packages: write
 
+env:
+  OWNER_LC: ${{ github.repository_owner }}
+
 jobs:
   pre-check:
     runs-on: ubuntu-latest
@@ -60,6 +63,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Lowercase owner
+        id: owner
+        run: echo "name=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       - name: Determine version
         id: version
         run: |
@@ -94,7 +101,7 @@ jobs:
           cache-to: type=gha,mode=max
           push: true
           provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/kiro-rs:${{ steps.version.outputs.version }}-${{ matrix.arch }}
+          tags: ghcr.io/${{ steps.owner.outputs.name }}/kiro-rs:${{ steps.version.outputs.version }}-${{ matrix.arch }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.description=Kiro.rs Docker Image
@@ -103,6 +110,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Lowercase owner
+        id: owner
+        run: echo "name=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -114,7 +125,7 @@ jobs:
         run: |
           VERSION="${{ needs.build.outputs.version }}"
           IS_BETA="${{ needs.build.outputs.is_beta }}"
-          IMAGE="ghcr.io/${{ github.repository_owner }}/kiro-rs"
+          IMAGE="ghcr.io/${{ steps.owner.outputs.name }}/kiro-rs"
 
           # Create manifest for version tag
           docker manifest create ${IMAGE}:${VERSION} \
