@@ -10,6 +10,8 @@ import {
   deleteCredential,
   getLoadBalancingMode,
   setLoadBalancingMode,
+  resetSuccessCount,
+  resetAllSuccessCount,
 } from '@/api/credentials'
 import type { AddCredentialRequest } from '@/types/api'
 
@@ -94,6 +96,28 @@ export function useDeleteCredential() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => deleteCredential(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credentials'] })
+    },
+  })
+}
+
+// 重置单个凭据的成功次数
+export function useResetSuccessCount() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => resetSuccessCount(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credentials'] })
+    },
+  })
+}
+
+// 重置所有凭据的成功次数
+export function useResetAllSuccessCount() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => resetAllSuccessCount(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['credentials'] })
     },

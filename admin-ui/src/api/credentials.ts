@@ -93,6 +93,18 @@ export async function deleteCredential(id: number): Promise<SuccessResponse> {
   return data
 }
 
+// 重置单个凭据的成功次数
+export async function resetSuccessCount(id: number): Promise<SuccessResponse> {
+  const { data } = await api.post<SuccessResponse>(`/credentials/${id}/reset-stats`)
+  return data
+}
+
+// 重置所有凭据的成功次数
+export async function resetAllSuccessCount(): Promise<SuccessResponse> {
+  const { data } = await api.post<SuccessResponse>('/credentials/reset-stats')
+  return data
+}
+
 // 获取负载均衡模式
 export async function getLoadBalancingMode(): Promise<{ mode: 'priority' | 'balanced' }> {
   const { data } = await api.get<{ mode: 'priority' | 'balanced' }>('/config/load-balancing')

@@ -12,7 +12,7 @@ import { AddCredentialDialog } from '@/components/add-credential-dialog'
 import { BatchImportDialog } from '@/components/batch-import-dialog'
 import { KamImportDialog } from '@/components/kam-import-dialog'
 import { BatchVerifyDialog, type VerifyResult } from '@/components/batch-verify-dialog'
-import { useCredentials, useDeleteCredential, useResetFailure, useLoadBalancingMode, useSetLoadBalancingMode } from '@/hooks/use-credentials'
+import { useCredentials, useDeleteCredential, useResetFailure, useLoadBalancingMode, useSetLoadBalancingMode, useResetAllSuccessCount } from '@/hooks/use-credentials'
 import { getCredentialBalance, forceRefreshToken } from '@/api/credentials'
 import { extractErrorMessage } from '@/lib/utils'
 import type { BalanceResponse } from '@/types/api'
@@ -54,6 +54,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
   const { mutate: resetFailure } = useResetFailure()
   const { data: loadBalancingData, isLoading: isLoadingMode } = useLoadBalancingMode()
   const { mutate: setLoadBalancingMode, isPending: isSettingMode } = useSetLoadBalancingMode()
+  const resetAllSuccess = useResetAllSuccessCount()
 
   // 计算分页
   const totalPages = Math.ceil((data?.credentials.length || 0) / itemsPerPage)
@@ -656,6 +657,22 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 <Button onClick={() => setVerifyDialogOpen(true)} size="sm" variant="secondary">
                   <CheckCircle2 className="h-4 w-4 mr-2 animate-spin" />
                   验活中... {verifyProgress.current}/{verifyProgress.total}
+                </Button>
+              )}
+              {data?.credentials && data.credentials.length > 0 && (
+                <Button
+                  onClick={() => {
+                    resetAllSuccess.mutate(undefined, {
+                      onSuccess: (res) => toast.success(res.message),
+                      onError: (err) => toast.error('重置失败: ' + (err as Error).message),
+                    })
+                  }}
+                  size="sm"
+                  variant="outline"
+                  disabled={resetAllSuccess.isPending}
+                >
+                  <RotateCcw className={`h-4 w-4 mr-2 ${resetAllSuccess.isPending ? 'animate-spin' : ''}`} />
+                  重置成功次数
                 </Button>
               )}
               {data?.credentials && data.credentials.length > 0 && (

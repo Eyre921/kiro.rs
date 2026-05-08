@@ -22,6 +22,7 @@ import {
   useResetFailure,
   useDeleteCredential,
   useForceRefreshToken,
+  useResetSuccessCount,
 } from '@/hooks/use-credentials'
 
 interface CredentialCardProps {
@@ -66,6 +67,7 @@ export function CredentialCard({
   const resetFailure = useResetFailure()
   const deleteCredential = useDeleteCredential()
   const forceRefresh = useForceRefreshToken()
+  const resetSuccess = useResetSuccessCount()
 
   const handleToggleDisabled = () => {
     setDisabled.mutate(
@@ -119,6 +121,17 @@ export function CredentialCard({
       },
       onError: (err) => {
         toast.error('刷新失败: ' + (err as Error).message)
+      },
+    })
+  }
+
+  const handleResetSuccess = () => {
+    resetSuccess.mutate(credential.id, {
+      onSuccess: (res) => {
+        toast.success(res.message)
+      },
+      onError: (err) => {
+        toast.error('重置失败: ' + (err as Error).message)
       },
     })
   }
@@ -252,7 +265,14 @@ export function CredentialCard({
             </div>
             <div>
               <span className="text-muted-foreground">成功次数：</span>
-              <span className="font-medium">{credential.successCount}</span>
+              <span
+                className="font-medium cursor-pointer hover:underline"
+                onClick={handleResetSuccess}
+                title="点击重置成功次数"
+              >
+                {credential.successCount}
+                <span className="text-xs text-muted-foreground ml-1">(点击重置)</span>
+              </span>
             </div>
             <div className="col-span-2">
               <span className="text-muted-foreground">最后调用：</span>
