@@ -122,6 +122,35 @@ pub async fn force_refresh_token(
     }
 }
 
+/// POST /api/admin/credentials/reset-stats
+/// 重置所有凭据的 success_count
+pub async fn reset_all_success_count(State(state): State<AdminState>) -> impl IntoResponse {
+    match state.service.reset_success_count(None) {
+        Ok(count) => Json(SuccessResponse::new(format!(
+            "已重置 {} 个凭据的 success_count",
+            count
+        )))
+        .into_response(),
+        Err(e) => (e.status_code(), Json(e.into_response())).into_response(),
+    }
+}
+
+/// POST /api/admin/credentials/:id/reset-stats
+/// 重置指定凭据的 success_count
+pub async fn reset_success_count(
+    State(state): State<AdminState>,
+    Path(id): Path<u64>,
+) -> impl IntoResponse {
+    match state.service.reset_success_count(Some(id)) {
+        Ok(_) => Json(SuccessResponse::new(format!(
+            "凭据 #{} success_count 已重置",
+            id
+        )))
+        .into_response(),
+        Err(e) => (e.status_code(), Json(e.into_response())).into_response(),
+    }
+}
+
 /// GET /api/admin/config/load-balancing
 /// 获取负载均衡模式
 pub async fn get_load_balancing_mode(State(state): State<AdminState>) -> impl IntoResponse {

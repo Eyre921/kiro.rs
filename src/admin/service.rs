@@ -132,6 +132,12 @@ impl AdminService {
             .map_err(|e| self.classify_error(e, id))
     }
 
+    pub fn reset_success_count(&self, id: Option<u64>) -> Result<u32, AdminServiceError> {
+        self.token_manager
+            .reset_success_count(id)
+            .map_err(|e| self.classify_error(e, id.unwrap_or(0)))
+    }
+
     /// 获取凭据余额（带缓存）
     pub async fn get_balance(&self, id: u64) -> Result<BalanceResponse, AdminServiceError> {
         // 先查缓存

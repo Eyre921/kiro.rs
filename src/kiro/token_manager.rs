@@ -1529,6 +1529,31 @@ impl MultiTokenManager {
         Ok(())
     }
 
+    pub fn reset_success_count(&self, id: Option<u64>) -> anyhow::Result<u32> {
+        let mut count = 0u32;
+        {
+            let mut entries = self.entries.lock();
+            match id {
+                Some(target_id) => {
+                    let entry = entries
+                        .iter_mut()
+                        .find(|e| e.id == target_id)
+                        .ok_or_else(|| anyhow::anyhow!("凭据不存在: {}", target_id))?;
+                    entry.success_count = 0;
+                    count = 1;
+                }
+                None => {
+                    for entry in entries.iter_mut() {
+                        entry.success_count = 0;
+                        count += 1;
+                    }
+                }
+            }
+        }
+        self.save_stats();
+        Ok(count)
+    }
+
     /// 获取指定凭据的使用额度（Admin API）
     pub async fn get_usage_limits_for(&self, id: u64) -> anyhow::Result<UsageLimitsResponse> {
         let credentials = {
